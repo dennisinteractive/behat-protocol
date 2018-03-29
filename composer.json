@@ -1,0 +1,14 @@
+{
+  "name": "dennisdigital/behat-protocol",
+  "description": "Provides steps to check the scheme use by HTTP resources",
+  "type": "project",
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "behat/mink":   "~1.5"
+  },
+  "autoload": {
+    "psr-4": {"DennisDigital\\Behat\\Protocol\\": "src"}
+  }
+}
