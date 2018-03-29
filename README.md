@@ -1,5 +1,5 @@
 # Behat Protocol
-Provides steps to check the scheme use by HTTP resources
+Provides steps to check the scheme used by HTTP resources
 
 ## Provides the following step definitions
 
