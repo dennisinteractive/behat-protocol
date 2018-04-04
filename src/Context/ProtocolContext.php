@@ -210,27 +210,16 @@ class ProtocolContext implements MinkAwareContext {
   }
 
   /**
-   * Set headers before each scenario.
+   * Set headers.
    */
   protected function setHeaders() {
     foreach ($this->headers as $key => $value) {
       if (!empty($value)) {
-        $this->setHeader($key, $value);
+        $driver = $this->mink->getSession()->getDriver();
+        if ($driver instanceof GoutteDriver) {
+          $driver->getClient()->setHeader($key, $value);
+        }
       }
-    }
-  }
-
-  /**
-   * Set a header.
-   *
-   * @param $key
-   * @param $value
-   * @throws \Exception
-   */
-  protected function setHeader($key, $value) {
-    $driver = $this->mink->getSession()->getDriver();
-    if ($driver instanceof GoutteDriver) {
-      $driver->getClient()->setHeader($key, $value);
     }
   }
 
