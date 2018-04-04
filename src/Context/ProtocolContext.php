@@ -4,7 +4,7 @@ namespace DennisDigital\Behat\Protocol\Context;
 use Behat\MinkExtension\Context\MinkAwareContext;
 use Behat\Mink\Mink;
 use Behat\Mink\Exception\ExpectationException;
-use Behat\Mink\Driver\GoutteDriver;
+use Behat\Mink\Driver\BrowserKitDriver;
 use Behat\Behat\Hook\Scope\StepScope;
 use \Exception;
 
@@ -70,7 +70,7 @@ class ProtocolContext implements MinkAwareContext {
    * @Given the response should not contain internal http urls
    */
   public function assertResponseNotContainsHttpUrls() {
-    $this->beforeStep();
+    $this->setHeaders();
     foreach ($this->getHttpBaseURls() as $base_url) {
       try {
         $this->mink->assertSession()->responseNotContains($base_url);
@@ -79,18 +79,18 @@ class ProtocolContext implements MinkAwareContext {
         throw new Exception($this->mink->getSession()->getCurrentUrl() . ' contains http:// URL.' . PHP_EOL . $e->getMessage());
       }
     }
-    $this->afterStep();
+    $this->cleanHeaders();
   }
 
   /**
    * @Given I should not see any internal http urls in JavaScript
    */
   public function notSeeHttpJSReferences() {
-    $this->beforeStep();
+    $this->setHeaders();
     if ($urls = $this->getInternalScriptUrls()) {
       $this->assertNotSeeHttpJsReferences($urls);
     }
-    $this->afterStep();
+    $this->cleanHeaders();
   }
 
   /**
@@ -195,32 +195,18 @@ class ProtocolContext implements MinkAwareContext {
   }
 
   /**
-   * Operations to run before each step provided by this context.
-   */
-  protected function beforeStep() {
-    $this->setHeaders();
-    $this->mink->getSession()->reload();
-  }
-
-  /**
-   * Operations to run after each step provided by this context.
-   */
-  protected function afterStep() {
-    $this->cleanHeaders();
-  }
-
-  /**
    * Set headers.
    */
   protected function setHeaders() {
     foreach ($this->headers as $key => $value) {
       if (!empty($value)) {
         $driver = $this->mink->getSession()->getDriver();
-        if ($driver instanceof GoutteDriver) {
+        if ($driver instanceof BrowserKitDriver) {
           $driver->getClient()->setHeader($key, $value);
         }
       }
     }
+    $this->mink->getSession()->reload();
   }
 
   /**
@@ -233,7 +219,7 @@ class ProtocolContext implements MinkAwareContext {
       return;
     }
     $driver = $this->mink->getSession()->getDriver();
-    if ($driver instanceof GoutteDriver) {
+    if ($driver instanceof BrowserKitDriver) {
       $client = $driver->getClient();
       foreach ($this->headers as $header) {
         $client->removeHeader($header);
