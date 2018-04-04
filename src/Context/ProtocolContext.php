@@ -4,6 +4,9 @@ namespace DennisDigital\Behat\Protocol\Context;
 use Behat\MinkExtension\Context\MinkAwareContext;
 use Behat\Mink\Mink;
 use Behat\Mink\Exception\ExpectationException;
+use Behat\Mink\Driver\GoutteDriver;
+use Behat\Behat\Hook\Scope\StepScope;
+use \Exception;
 
 /**
  * ProtocolContext
@@ -25,6 +28,17 @@ class ProtocolContext implements MinkAwareContext {
   private $hosts = array();
 
   /**
+   * Headers sent with each request.
+   *
+   * Cleaned up in ::cleanHeaders().
+   *
+   * @var array
+   */
+  protected $headers = array(
+    'X-Forwarded-Proto' => 'https',
+  );
+
+  /**
    * ProtocolContext constructor.
    *
    * @param array $parameters
@@ -32,6 +46,10 @@ class ProtocolContext implements MinkAwareContext {
   public function __construct($parameters = array()) {
     if (isset($parameters['hosts'])) {
       $this->hosts = $parameters['hosts'];
+    }
+
+    if (isset($parameters['headers'])) {
+      $this->headers = array_merge($this->headers, $parameters['headers']);
     }
   }
 
@@ -52,6 +70,7 @@ class ProtocolContext implements MinkAwareContext {
    * @Given the response should not contain internal http urls
    */
   public function assertResponseNotContainsHttpUrls() {
+    $this->beforeStep();
     foreach ($this->getHttpBaseURls() as $base_url) {
       try {
         $this->mink->assertSession()->responseNotContains($base_url);
@@ -60,15 +79,18 @@ class ProtocolContext implements MinkAwareContext {
         throw new Exception($this->mink->getSession()->getCurrentUrl() . ' contains http:// URL.' . PHP_EOL . $e->getMessage());
       }
     }
+    $this->afterStep();
   }
 
   /**
    * @Given I should not see any internal http urls in JavaScript
    */
   public function notSeeHttpJSReferences() {
+    $this->beforeStep();
     if ($urls = $this->getInternalScriptUrls()) {
       $this->assertNotSeeHttpJsReferences($urls);
     }
+    $this->afterStep();
   }
 
   /**
@@ -170,5 +192,63 @@ class ProtocolContext implements MinkAwareContext {
    */
   public function setMinkParameters(array $parameters) {
     $this->minkParameters = $parameters;
+  }
+
+  /**
+   * Operations to run before each step provided by this context.
+   */
+  protected function beforeStep() {
+    $this->setHeaders();
+    $this->mink->getSession()->reload();
+  }
+
+  /**
+   * Operations to run after each step provided by this context.
+   */
+  protected function afterStep() {
+    $this->cleanHeaders();
+  }
+
+  /**
+   * Set headers before each scenario.
+   */
+  protected function setHeaders() {
+    foreach ($this->headers as $key => $value) {
+      if (!empty($value)) {
+        $this->setHeader($key, $value);
+      }
+    }
+  }
+
+  /**
+   * Set a header.
+   *
+   * @param $key
+   * @param $value
+   * @throws \Exception
+   */
+  protected function setHeader($key, $value) {
+    $driver = $this->mink->getSession()->getDriver();
+    if ($driver instanceof GoutteDriver) {
+      $driver->getClient()->setHeader($key, $value);
+    }
+  }
+
+  /**
+   * Clean up headers after every scenario.
+   *
+   * @AfterScenario
+   */
+  public function cleanHeaders() {
+    if (empty($this->headers)) {
+      return;
+    }
+    $driver = $this->mink->getSession()->getDriver();
+    if ($driver instanceof GoutteDriver) {
+      $client = $driver->getClient();
+      foreach ($this->headers as $header) {
+        $client->removeHeader($header);
+      }
+    }
   }
 }
