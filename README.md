@@ -11,7 +11,6 @@ Then I should not see any internal http urls in JavaScript
 ## Default behaviour
 
 - `base_url` will be checked
-- `X-Forwarded-Proto` header will be set to `https`
 
 ## Configure in behat.yml
 
@@ -28,16 +27,11 @@ DennisDigital\Behat\Protocol\Context\ProtocolContext:
       - cdn.example.com
 ```
 
-#### Specify extra headers to be sent with each request
+#### Specify headers to be sent with each request
 
 ```
 DennisDigital\Behat\Protocol\Context\ProtocolContext:
   parameters:
     headers:
       "X-Forwarded-Proto": https
-```
-
-You can prevent the `X-Forwarded-Proto` being sent by setting it to `''`:
-```
-"X-Forwarded-Proto": ''
 ```

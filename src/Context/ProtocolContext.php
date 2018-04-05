@@ -34,9 +34,7 @@ class ProtocolContext implements MinkAwareContext {
    *
    * @var array
    */
-  protected $headers = array(
-    'X-Forwarded-Proto' => 'https',
-  );
+  protected $headers = array();
 
   /**
    * ProtocolContext constructor.
