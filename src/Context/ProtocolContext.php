@@ -103,7 +103,10 @@ class ProtocolContext implements MinkAwareContext {
 
     foreach ($urls as $url) {
       $session->visit($url);
-      $this->assertResponseNotContainsHttpUrls();
+      // Only check scripts that exist.
+      if ($session->getStatusCode() == 200) {
+        $this->assertResponseNotContainsHttpUrls();
+      }
     }
 
     // Go back to original page.
